@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Install Verus Miner</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 960px;
+      margin: auto;
+    }
+    h1 {
+      color: #58a6ff;
+    }
+    pre {
+      background-color: #161b22;
+      padding: 1em;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-x: auto;
+    }
+    button {
+      background-color: #238636;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Script Install Verus Miner (Auto Termux)</h1>
+    <button onclick="copyText()">Salin Semua Perintah</button>
+    <pre id="code">cat > install_verus.sh <<'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+cd $HOME
+
+echo "[*] Update & instal dependensi…"
+yes | pkg update
+yes | pkg install -y libjansson wget nano
+
+echo "[*] Mencegah sleep…"
+termux-wake-lock
+
+echo "[*] Menyiapkan folder miner…"
+mkdir -p ccminer
+cd ccminer
+
+echo "[*] Mengunduh ccminer…"
+wget -q -O ccminer https://github.com/buburayamz/azkagt/raw/main/ccminer
+chmod +x ccminer
+
+echo "[*] Membuat config.json…"
+cat > config.json <<'CONFIG'
+{
+  "url": "stratum+tcp://sg.vipor.net:5040",
+  "user": "RLiJAt7bfsB1Zdu9qn18AtYRuWBTrqUap9.ABA-O",
+  "pass": "x",
+  "algo": "verus"
+}
+CONFIG
+
+echo "[*] Membuat start.sh…"
+cat > start.sh <<'START'
+#!/data/data/com.termux/files/usr/bin/bash
+cd "$(dirname "$0")"
+termux-wake-lock
+./ccminer -c config.json
+START
+chmod +x start.sh
+
+echo "[*] Menambahkan autostart ke ~/.bashrc (sekali saja)…"
+if ! grep -q "## AUTOSTART VERUS" ~/.bashrc 2>/dev/null; then
+cat >> ~/.bashrc <<'BASHRC'
+
+## AUTOSTART VERUS
+if [ -x ~/ccminer/start.sh ]; then
+  echo "[Auto] Menjalankan Verus miner…"
+  cd ~/ccminer
+  ./start.sh
+fi
+BASHRC
+fi
+
+echo "[*] Selesai! Miner mulai sekarang & otomatis tiap buka Termux."
+cd ~/ccminer
+./start.sh
+EOF
+
+chmod +x install_verus.sh
+bash install_verus.sh</pre>
+  </div>
+
+  <script>
+    function copyText() {
+      const text = document.getElementById("code").innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Script berhasil disalin ke clipboard!");
+      });
+    }
+  </script>
+</body>
+</html>
