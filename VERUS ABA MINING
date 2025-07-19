@@ -1,1 +1,59 @@
-<pre> <code>```bash wget https://raw.githubusercontent.com/namarepo/file.sh chmod +x file.sh && ./file.sh ```</code> </pre>
+cat > install_verus.sh <<'EOF'
+#!/data/data/com.termux/files/usr/bin/bash
+set -e
+cd $HOME
+
+echo "[*] Update & instal dependensi…"
+yes | pkg update
+yes | pkg install -y libjansson wget nano
+
+echo "[*] Mencegah sleep…"
+termux-wake-lock
+
+echo "[*] Menyiapkan folder miner…"
+mkdir -p ccminer
+cd ccminer
+
+echo "[*] Mengunduh ccminer…"
+wget -q -O ccminer https://github.com/buburayamz/azkagt/raw/main/ccminer
+chmod +x ccminer
+
+echo "[*] Membuat config.json…"
+cat > config.json <<'CONFIG'
+{
+  "url": "stratum+tcp://sg.vipor.net:5040",
+  "user": "RLiJAt7bfsB1Zdu9qn18AtYRuWBTrqUap9.ABA-O",
+  "pass": "x",
+  "algo": "verus"
+}
+CONFIG
+
+echo "[*] Membuat start.sh…"
+cat > start.sh <<'START'
+#!/data/data/com.termux/files/usr/bin/bash
+cd "$(dirname "$0")"
+termux-wake-lock
+./ccminer -c config.json
+START
+chmod +x start.sh
+
+echo "[*] Menambahkan autostart ke ~/.bashrc (sekali saja)…"
+if ! grep -q "## AUTOSTART VERUS" ~/.bashrc 2>/dev/null; then
+cat >> ~/.bashrc <<'BASHRC'
+
+## AUTOSTART VERUS
+if [ -x ~/ccminer/start.sh ]; then
+  echo "[Auto] Menjalankan Verus miner…"
+  cd ~/ccminer
+  ./start.sh
+fi
+BASHRC
+fi
+
+echo "[*] Selesai! Miner mulai sekarang & otomatis tiap buka Termux."
+cd ~/ccminer
+./start.sh
+EOF
+
+chmod +x install_verus.sh
+bash install_verus.sh
